@@ -3,6 +3,9 @@ package com.hcltech.retail_ordering.services;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.hcltech.retail_ordering.dto.LoginRequest;
+import com.hcltech.retail_ordering.dto.RegisterRequest;
+import com.hcltech.retail_ordering.entity.Role;
 import com.hcltech.retail_ordering.entity.User;
 import com.hcltech.retail_ordering.repository.UserRepository;
 import com.hcltech.retail_ordering.security.JwtUtil;
@@ -17,20 +20,36 @@ public class AuthService {
     private final BCryptPasswordEncoder encoder;
     private final JwtUtil jwtUtil;
 
-    public String register(User user) {
-        user.setPassword(encoder.encode(user.getPassword()));
+    // REGISTER
+    public String register(RegisterRequest request) {
+
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("Username already exists");
+        }
+
+        User user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(encoder.encode(request.getPassword()))
+                .contactNumber(request.getContactNumber())
+                .role(Role.CUSTOMER) // default role
+                .build();
+
         userRepository.save(user);
-        return "User registered";
+
+        return "User registered successfully";
     }
 
-    public String login(String username, String password) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow();
+    // LOGIN
+    public String login(LoginRequest request) {
 
-        if (!encoder.matches(password, user.getPassword())) {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!encoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
 
-        return jwtUtil.generateToken(username);
+        return jwtUtil.generateToken(user.getUsername());
     }
 }

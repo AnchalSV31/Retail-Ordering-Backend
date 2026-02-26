@@ -28,5 +28,6 @@ public class Order {
 
     private Integer quantity;
     private Double totalAmount;
+    private String deliveryAddress; 
     private LocalDateTime orderDate;
 }

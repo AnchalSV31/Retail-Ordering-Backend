@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.hcltech.retail_ordering.dto.OrderRequest;
 import com.hcltech.retail_ordering.entity.Menu;
 import com.hcltech.retail_ordering.entity.Order;
 import com.hcltech.retail_ordering.entity.User;
@@ -23,24 +24,25 @@ public class OrderService {
     private final UserRepository userRepository;
 
     @Transactional
-    public Order placeOrder(Long menuId, Integer quantity, String username) {
+    public Order placeOrder(OrderRequest request, String username) {
 
         User user = userRepository.findByUsername(username).orElseThrow();
-        Menu menu = menuRepository.findById(menuId).orElseThrow();
+        Menu menu = menuRepository.findById(request.getMenuId()).orElseThrow();
 
-        if (menu.getStock() < quantity) {
+        if (menu.getStock() < request.getQuantity()) {
             throw new RuntimeException("Insufficient stock");
         }
 
-        menu.setStock(menu.getStock() - quantity);
+        menu.setStock(menu.getStock() - request.getQuantity());
 
         Order order = Order.builder()
-                .user(user)
-                .menu(menu)
-                .quantity(quantity)
-                .totalAmount(menu.getPrice() * quantity)
-                .orderDate(LocalDateTime.now())
-                .build();
+            .user(user)
+            .menu(menu)
+            .quantity(request.getQuantity())
+            .totalAmount(menu.getPrice() * request.getQuantity())
+            .deliveryAddress(request.getDeliveryAddress())
+            .orderDate(LocalDateTime.now())
+            .build();
 
         return orderRepository.save(order);
     }
