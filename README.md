@@ -1,1 +1,1 @@
-### Backend Code for CraveCart Reatil Ordering Website
+### Backend Code for CraveCart Retail Ordering Website
